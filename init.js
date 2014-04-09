@@ -10,6 +10,7 @@ var CoinswitchListener = require('./libs/coinswitchListener.js');
 var RedisBlocknotifyListener = require('./libs/redisblocknotifyListener.js');
 var WorkerListener = require('./libs/workerListener.js');
 var PoolWorker = require('./libs/poolWorker.js');
+var ShareWriter = require('./libs/shareWriter.js');
 var PaymentProcessor = require('./libs/paymentProcessor.js');
 var Website = require('./libs/website.js');
 
@@ -68,6 +69,10 @@ if (cluster.isWorker){
             break;
         case 'website':
             new Website(logger);
+            break;
+        
+        case 'shareWriter':
+            new ShareWriter(logger, JSON.parse(process.env.poolConfig), portalConfig.redisBlockNotifyListener);
             break;
     }
 
@@ -148,7 +153,7 @@ var spawnPoolWorkers = function(portalConfig, poolConfigs){
             portalConfig: JSON.stringify(portalConfig)
         });
         worker.on('exit', function(code, signal){
-            logger.error('Master', 'PoolSpanwer', 'Fork ' + forkId + ' died, spawning replacement worker...');
+            logger.error('Master', 'PoolSpawner', 'Fork ' + forkId + ' died, spawning replacement worker...');
             setTimeout(function(){
                 createPoolWorker(forkId);
             }, 2000);
@@ -286,6 +291,27 @@ var startWebsite = function(portalConfig, poolConfigs){
     });
 };
 
+var spawnShareWriters = function(portalConfig, poolConfigs) {
+    var createShareWriter = function(portalConfig, coin, poolConfig) {
+        var worker = cluster.fork({
+            workerType: 'shareWriter',
+            coin: coin,
+            poolConfig: JSON.stringify(poolConfig)
+        });
+        worker.on('exit', function(code, signal){
+            logger.error('Master', 'ShareWriterSpawner', 'ShareWriter for coin ' + coin + ' died, spawning replacement worker...');
+            setTimeout(function(){
+                createShareWriter(portalConfig, coin, poolConfig);
+            }, 2000);
+        });
+    };
+    
+    Object.keys(poolConfigs).forEach(function(coin) {
+        var poolConfig = poolConfigs[coin];
+        createShareWriter(portalConfig, coin, poolConfig);
+    });
+    return;
+};
 
 (function init(){
 
@@ -302,6 +328,8 @@ var startWebsite = function(portalConfig, poolConfigs){
     startRedisBlockListener(portalConfig);
 
     startWorkerListener(poolConfigs);
+
+    spawnShareWriters(portalConfig, poolConfigs);
 
     startWebsite(portalConfig, poolConfigs);
 
