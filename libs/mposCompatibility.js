@@ -19,8 +19,10 @@ module.exports = function(logger, poolConfig){
             database: mposConfig.database
         });
         connection.connect(function(err){
-            if (err)
-                logger.error(logIdentify, logComponent, 'Could not connect to mysql database: ' + JSON.stringify(err))
+             if (err) {
+                logger.error(logIdentify, logComponent, 'Could not connect to mysql database: ' + JSON.stringify(err));
+                connect();
+            }
             else{
                 logger.debug(logIdentify, logComponent, 'Successful connection to MySQL database');
             }
