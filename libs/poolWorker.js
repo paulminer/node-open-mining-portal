@@ -99,7 +99,7 @@ module.exports = function(logger){
 
         //Functions required for MPOS compatibility
         if (shareProcessing && shareProcessing.mpos && shareProcessing.mpos.enabled){
-            var mposCompat = new MposCompatibility(logger, poolOptions)
+            var mposCompat = new MposCompatibility(logger, poolOptions, portalConfig.redisBlockNotifyListener)
 
             handlers.auth = function(workerName, password, authCallback){
                 mposCompat.handleAuth(workerName, password, authCallback);
