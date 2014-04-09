@@ -21,7 +21,7 @@ module.exports = function(logger, poolConfig){
         connection.connect(function(err){
              if (err) {
                 logger.error(logIdentify, logComponent, 'Could not connect to mysql database: ' + JSON.stringify(err));
-                connect();
+                process.exit(1);
             }
             else{
                 logger.debug(logIdentify, logComponent, 'Successful connection to MySQL database');
