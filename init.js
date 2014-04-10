@@ -308,7 +308,11 @@ var spawnShareWriters = function(portalConfig, poolConfigs) {
     
     Object.keys(poolConfigs).forEach(function(coin) {
         var poolConfig = poolConfigs[coin];
-        createShareWriter(portalConfig, coin, poolConfig);
+        var shareProcessing = poolConfig.shareProcessing;
+        
+        if (shareProcessing && shareProcessing.mpos && shareProcessing.mpos.enabled) {
+            createShareWriter(portalConfig, coin, poolConfig);
+        }
     });
     return;
 };
