@@ -12,6 +12,26 @@ module.exports = function(logger, poolConfig, redisOptions) {
     var logIdentify = 'MySQL';
     var logComponent = coin;
     
+    function zeroPad(n, len) {
+        var s = '' + n;
+        
+        while (s.length < len) {
+            s = '0' + s;
+        }
+        
+        return s;
+    }
+    
+    function formatMySQLDateString(d) {
+        // 'YYYY-MM-DD HH:MM:SS'
+        return zeroPad(d.getFullYear(),  4) + '-' +
+               zeroPad(d.getMonth() + 1, 2) + '-' +
+               zeroPad(d.getDate(),      2) + ' ' +
+               zeroPad(d.getHours(),     2) + ':' +
+               zeroPad(d.getMinutes(),   2) + ':' +
+               zeroPad(d.getSeconds(),   2);
+    }
+    
     function connect() {
         connection = mysql.createConnection({
             host: mposConfig.host,
@@ -72,7 +92,7 @@ module.exports = function(logger, poolConfig, redisOptions) {
     this.handleShare = function(isValidShare, isValidBlock, shareData){
 
         var dbData = [
-            new Date(),
+            formatMySQLDateString(new Date()),
             shareData.ip,
             shareData.worker,
             isValidShare ? 'Y' : 'N', 
